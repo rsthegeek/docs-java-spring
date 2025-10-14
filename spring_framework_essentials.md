@@ -347,7 +347,7 @@ class TransferService {
 ![img](imgs/wtww_2.png)
 - Can determine `BankTransferService` extends both `TransferService` and `BankService`.
 
-- Best practices of defining Spring Beans
+#### Best practices of defining Spring Beans
   - Aim to be "sufficiently expressive"
     - Return interfaces except where multiple interfaces exists and they are needed for dependency injection.
     - Coding to interface is good practice.
