@@ -229,3 +229,33 @@ int maxTransfersPerDay; // Auto conversion, string -> int
 
 ![img](imgs/stereotypes.png)
 
+## Inside the Spring container [M5]
+* The content of this chapter is a simplified view of spring's inner workings.
+- Spring bean lifecycle:
+  1. Initialization
+     - A. Load & Process Bean Definitions
+       - The `@Configuration` classes, xml files, and `@Component` classes are scanned.
+       - Bean Definitions added to **BeanFactory** each indexed under its id and type.
+       - Special **BeanFactoryPostProcessor** beans invoked, which can modify the definition of any bean.
+     - B. Perform Bean Creation
+
+     ![img](imgs/bean_initialization_steps.png)
+
+  2. Usage
+     - Beans are available for use in the application.
+  3. Destruction (Application context closed)
+     - Beans are released for Garbage Collection.
+
+- `ApplicationContext` is a `BeanFactory`.
+- `BeanFactoryPostProcessor`
+  - Is a functional interface.
+    ```java
+    public interface BeanFactoryPostProcessor {
+        void postProcessBeanFactory(ConfigurableListableBeanFactory beanFactory);
+    }
+    ```
+  - Is a Spring extension point
+  - Allows you to modify bean definitions before any beans are actually instantiated.
+  - `PropertySourcesPlaceholderConfigurer` (Spring 4.3+) is an example of it that resolves `@Value("${}")` placeholder values.
+  - It needs to run before any beans are created so use of **static** `@Bean` method is recommended.
+  - It's an internal bean invoked by spring (not your code).
