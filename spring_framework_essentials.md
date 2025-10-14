@@ -354,3 +354,5 @@ class TransferService {
   - **Warning:** Even if you return implementation types:
     - Still use interfaces when injecting dependencies.
     - Injecting implementation types is brittle: may fail if the bean is proxied or a different implementation returned.
+
+## Introducing Aspect Oriented Programming (AOP) [M6]
