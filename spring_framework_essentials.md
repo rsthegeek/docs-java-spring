@@ -238,15 +238,16 @@ int maxTransfersPerDay; // Auto conversion, string -> int
        - Bean Definitions added to **BeanFactory** each indexed under its id and type.
        - Special **BeanFactoryPostProcessor** beans invoked, which can modify the definition of any bean.
      - B. Perform Bean Creation
-
-     ![img](imgs/bean_initialization_steps.png)
-
   2. Usage
      - Beans are available for use in the application.
   3. Destruction (Application context closed)
      - Beans are released for Garbage Collection.
 
 ---
+### 1. Initialization phase
+
+![img](imgs/bean_initialization_steps.png)
+
 - `ApplicationContext` is a `BeanFactory`.
 
 - `BeanFactoryPostProcessor`
@@ -282,3 +283,35 @@ int maxTransfersPerDay; // Auto conversion, string -> int
   ```
   - The beanPostProcessor classes can be a normal bean in spring, annotated with `@Component` or `@Bean` in config class.
   ![img](imgs/bean_configuration_lifecycle.png)
+
+
+### 2. Usage phase [M5E3]
+- When retrieving a bean, two cases may occur:
+  1. The retrieved bean is just a bean: Nothing new!
+  2. The retrieved bean is a **Proxy** to the original bean!
+- The proxy is created during initialization phase by a `BeanPostProcessor`.
+- The BPP wraps your bean in a "proxy" adding behavior to it transparently.
+- Example: Transactions
+  ![img](imgs/bean_proxy_transactions.png)
+
+#### Kinds of proxies
+- **JDK Proxy**
+  - Also called dynamic proxies
+  - API is built into the JDK
+  - Requirements: Java Interface(s)
+  - All interfaces proxied
+- **CGLib Proxy**
+  - Not built into JDK
+  - Included in Spring jars
+  - Used when interface is not available
+  - Cannot be applied to final classes or methods
+  - Spring Boot will always go with CGLib Proxies. (JDK Proxy can be used in vanilla Spring)
+  ![img](imgs/jdk_vs_cglib_proxy.png)
+
+### Destruction phase
+- All beans are cleaned up
+  - Any registered `@PreDestroy` methods are invoked.
+  - Beans released for the Garbage Collector to destroy.
+- Happens when we close the context. (`ConfigurableApplicationContext::close()`)
+- Also happens when any bean goes out of scope (except Prototype scoped beans).
+- Only happens when app is shutdown gracefully, not if killed or crashed.
