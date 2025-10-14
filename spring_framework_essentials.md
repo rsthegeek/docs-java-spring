@@ -246,6 +246,7 @@ int maxTransfersPerDay; // Auto conversion, string -> int
   3. Destruction (Application context closed)
      - Beans are released for Garbage Collection.
 
+---
 - `ApplicationContext` is a `BeanFactory`.
 - `BeanFactoryPostProcessor`
   - Is a functional interface.
@@ -259,3 +260,22 @@ int maxTransfersPerDay; // Auto conversion, string -> int
   - `PropertySourcesPlaceholderConfigurer` (Spring 4.3+) is an example of it that resolves `@Value("${}")` placeholder values.
   - It needs to run before any beans are created so use of **static** `@Bean` method is recommended.
   - It's an internal bean invoked by spring (not your code).
+- The Initializer extension point
+  - Special case of a bean post-processing
+  - Causes initialization methods to be called (`@PostConstruct`, `init-method`, etc.)
+  - Internally Spring uses several initializer BPPs. (`CommonAnnotationBeanPostProcessor` enables JSR-250 annotations like `@PostConstruct`, `@Resource`, etc.)
+- `BeanPostProcessor` Extension point
+  - Can modify bean **instances** in any way.
+  - Will run against every bean.
+  - Can modify a bean before and/or after Initialization.
+  ```java
+  public interface BeanPostProcessor {
+      Object postProcessBeforeInitialization(Object bean, String beanName);
+      Object postProcessAfterInitialization(Object bean, String beanName);
+      // Object in method args -> Original bean
+      // Object in method return -> Post-processed bean
+      // If the bean is not retuned, it will be lost!
+  }
+  ```
+  - The beanPostProcessor classes can be a normal bean in spring, annotated with `@Component` or `@Bean` in config class.
+  ![img](imgs/bean_configuration_lifecycle.png)
