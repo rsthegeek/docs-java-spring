@@ -315,3 +315,46 @@ int maxTransfersPerDay; // Auto conversion, string -> int
 - Happens when we close the context. (`ConfigurableApplicationContext::close()`)
 - Also happens when any bean goes out of scope (except Prototype scoped beans).
 - Only happens when app is shutdown gracefully, not if killed or crashed.
+
+### More on Bean Creation [M5E4]
+- Find/create the bean dependencies is a **recursive** process.
+- You can force dependency order by `@DependsOn("beanName")` both with annotation-based config method and java config.
+```java
+@Component
+@DependsOn("accountService")
+class TransferService {
+  // ...
+}
+```
+- In this example `TransferService` will be created right after `AccountService`.
+
+#### Determining Bean Name & Type
+
+| Definition                     | Name                                                               | Type                    |
+|--------------------------------|--------------------------------------------------------------------|-------------------------|
+| **1. Java config**             | From `@Bean` name/value attribute<br>Or from method name           | From method return type |
+| **2. Annotation-based Config** | From annotation value attribute<br>Or derived from class name      | From annotated class    |
+
+- **1** typically returns an *interface*
+- **2** provides *actual* implementation class
+
+#### Why won't this work?
+```java
+// TransferService does not extend BankService
+class BankTransferServiceImpl implements TransferService, BankService {
+  //...
+}
+
+@Configuration
+class Config {
+    @Bean
+    public BankingClient bankingService(BankService svc) {
+        return new BankingClient(svc);
+    }
+    
+    @Bean
+    public TransferService transferService(AccountRepository repo) {
+        return new BankTransferServiceImpl(repo);
+    }
+}
+```
