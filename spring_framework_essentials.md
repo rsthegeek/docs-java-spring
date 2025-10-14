@@ -32,14 +32,14 @@
   3. Public getters and setters
   4. Should be serializable
 
-## Spring configuration class
+## Spring configuration class [M2]
 - Configuration classes is annotated with `@Configuration`
 - Configuration `@Bean`s would be eagerly loaded in the correct dependency order.
-- By default, the name of the method is the name of the bean. (can be overwritten in the @Bean annotation call)
+- By default, the name of the method is the name of the bean. (can be overwritten in the @Bean(name=) annotation call)
 - Later the Bean is accessible using `ApplicationContext::getBean()` in 3 forms.
   ![img](imgs/retreving_a_bean.png)
 - The Application context is the dependency injection container.
-- The application contact can be created in any environment. (e.g., Standalone app, web app, JUnit test, etc.)
+- The application context can be created in any environment. (e.g., Standalone app, web app, JUnit test, etc.)
   - Using `SpringApplication.run(ApplicationConfig.class): ApplicationContext`
 - Other configuration classes can be imported to the root config class with `@Import`.
   ![img](imgs/multiple_config_classes.png)
@@ -76,7 +76,7 @@
 - Improves testability.
 - Allows centralized control over object lifecycle.
 
-## More on Configuration
+## More on Configuration [M3]
 ### Use External Properties to control Configuration [M3E1]
 - `Environment` bean represents loaded properties from runtime environment.
 - Properties derived from various sources, in this order:
