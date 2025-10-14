@@ -248,6 +248,7 @@ int maxTransfersPerDay; // Auto conversion, string -> int
 
 ---
 - `ApplicationContext` is a `BeanFactory`.
+
 - `BeanFactoryPostProcessor`
   - Is a functional interface.
     ```java
@@ -260,10 +261,12 @@ int maxTransfersPerDay; // Auto conversion, string -> int
   - `PropertySourcesPlaceholderConfigurer` (Spring 4.3+) is an example of it that resolves `@Value("${}")` placeholder values.
   - It needs to run before any beans are created so use of **static** `@Bean` method is recommended.
   - It's an internal bean invoked by spring (not your code).
+
 - The Initializer extension point
   - Special case of a bean post-processing
   - Causes initialization methods to be called (`@PostConstruct`, `init-method`, etc.)
   - Internally Spring uses several initializer BPPs. (`CommonAnnotationBeanPostProcessor` enables JSR-250 annotations like `@PostConstruct`, `@Resource`, etc.)
+
 - `BeanPostProcessor` Extension point
   - Can modify bean **instances** in any way.
   - Will run against every bean.
