@@ -339,22 +339,18 @@ class TransferService {
 - **2** provides *actual* implementation class
 
 #### Why won't this work?
-```java
-// TransferService does not extend BankService
-class BankTransferServiceImpl implements TransferService, BankService {
-  //...
-}
 
-@Configuration
-class Config {
-    @Bean
-    public BankingClient bankingService(BankService svc) {
-        return new BankingClient(svc);
-    }
-    
-    @Bean
-    public TransferService transferService(AccountRepository repo) {
-        return new BankTransferServiceImpl(repo);
-    }
-}
-```
+![img](imgs/wtww_1.png)
+
+- **Solution 1:** Use `BankTransferServiceImpl` as return type instead of `TransferService` in the second `@Bean`; giving more info to the container.
+- **Solution 2:** Create a composite interface and use it as return type of second `@Bean` like so:
+![img](imgs/wtww_2.png)
+- Can determine `BankTransferService` extends both `TransferService` and `BankService`.
+
+- Best practices of defining Spring Beans
+  - Aim to be "sufficiently expressive"
+    - Return interfaces except where multiple interfaces exists and they are needed for dependency injection.
+    - Coding to interface is good practice.
+  - **Warning:** Even if you return implementation types:
+    - Still use interfaces when injecting dependencies.
+    - Injecting implementation types is brittle: may fail if the bean is proxied or a different implementation returned.
