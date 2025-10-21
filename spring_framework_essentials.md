@@ -356,3 +356,25 @@ class TransferService {
     - Injecting implementation types is brittle: may fail if the bean is proxied or a different implementation returned.
 
 ## Introducing Aspect Oriented Programming (AOP) [M6]
+- Enables modularization of cross-cutting concerns like:
+  - Logging and tracing
+  - Transaction Management
+  - Security
+  - Caching
+  - Error Handling
+  - Performance Monitoring
+  - Custom Business Rules
+- How to find cross-cutting concerns? The `every` keyword in:
+  - Perform a role-based security check before _every_ application method.
+- What will having with no AOP?
+  - Code Tangling: concerns coupling
+  - Code Scattering: same logic everywhere
+  ![img](imgs/aop1.png)
+
+### Leading AOP Technologies
+- AspectJ
+  - Original AOP technology (since 1995)
+  - A full-blown AOP language, Using bytecode modification for aspect weaving.
+- Spring AOP
+  - Java-based AOP framework with AspectJ integration
+  - Using dynamic proxies for aspect weaving.
