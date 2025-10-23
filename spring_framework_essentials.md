@@ -355,7 +355,7 @@ class TransferService {
     - Still use interfaces when injecting dependencies.
     - Injecting implementation types is brittle: may fail if the bean is proxied or a different implementation returned.
 
-## Introducing Aspect Oriented Programming (AOP) [M6]
+## Introducing Aspect Oriented Programming (AOP) [🔗](https://docs.spring.io/spring-framework/reference/core/aop.html) [M6]
 - Enables modularization of cross-cutting concerns like:
   - Logging and tracing
   - Transaction Management
@@ -423,3 +423,44 @@ public class PropertyChangeTracker {
 
 ### Which method is going to get proxied?
 - When using JDK proxy, only methods existing in the interface will be proxied.
+
+### Defining Pointcuts [M6E3]
+- [Pointcut API in Spring](https://docs.spring.io/spring-framework/reference/core/aop-api/pointcuts.html)
+- [AspectJ Documentation](https://eclipse.dev/aspectj/doc/latest/index.html)
+- Spring AOP uses AspectJ's pointcut expression language.
+- Spring AOP is a subset of AspectJ.
+
+#### Common Pointcut Designator
+- `execution(<method pattern>)`: The method must match the pattern.
+- Can chain together to create composite pointcuts.
+  - `&&` and, `||` or, `!` not.
+  - `execution(<pattern1>) || execution(<pattern2>)`
+- Method Pattern:
+  - `[Modifiers] ReturnType [ClassType] MethodName (Arguments) [throws ExceptionType]`
+
+#### Example pointcut expression
+![img](imgs/example_pointcut_expression.png)
+- Wildcards:
+  - `*` matches once (return type, package, class, method name, argument)
+  - `..` matches zero or more (argument or package)
+
+- `execution(void send*(rewards.Dining))`
+  - Any method starting with `send` that takes a single `Dining` parameter and has a void return type.
+  - Note the use of fully qualified class name. any types except primitives and String require it.
+
+- Implementation vs. Interface
+  - Restrict by class: `execution(void example.MessageServiceImpl.*(..))`
+    - Any void method in the `MessageServiceImpl` class, including any subclasses.
+    - But will be ignored if a different implementation is used.
+  - Restrict by Interface: `execution(void example.MessageService.send(*))`
+    - Any void send method taking one argument, in any object implementing MessageService.
+    - More flexible choice works if the implementation changes.
+  - Using Annotations: `execution(@javax.annotation.security.RolesAllowed void send*(..))`
+    - Any void method whose name starts with `send` that is annotated with the `@RolesAllowed` annotation.
+        ```java
+        public interface Mailer {
+            @rolesAllowed("USER")
+            public void sendMessage(String text);
+        }
+        ```
+
