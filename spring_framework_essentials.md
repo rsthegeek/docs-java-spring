@@ -464,3 +464,73 @@ public class PropertyChangeTracker {
         }
         ```
 
+### Implementing Advice [M5E4]
+#### Before
+- If the advice throws an exception, the target will not be called. This is a valid use of Before Advice.
+  ![img](imgs/aop_advices_before.png)
+
+#### After Returning
+  ![img](imgs/aop_advices_after_returning.png)
+  ```java
+  @AfterReturning(value = "execution(* service..*(..))", returning = "reward")
+  public void audit(JoinPoint jp, Reward reward) {
+      auditService.logEvent(jp.getSignature() +
+          " returns the following reward object: " + reward.toString());
+  }
+  // Audit all operations in the service package that return a `Reward` object.
+  ```
+- Uses the `reward` parameter Type and uses it as pointcut return type.
+
+#### AfterThrowing
+- Only invokes if the right exception type is thrown.
+- It will not stop the exception from propagating, but it can throw a different type of exception. (translation)
+- ℹ️ If you with to stop the exception from propagating any further, you can use an `@Around` advice.
+  ![img](imgs/aop_advices_after_throwing.png)
+  ```java
+  @AfterThrowing(value = "execution(* *..Repository.*(..))", throwing = "e")
+  public void report(JoinPoint jp, DataAccessException e) {
+      mailService.emailFailure("Exception in repository", jp, e);
+  }
+  // Sends an email every time a Repository class
+  // throws an exception of type DataAccessException
+  // or any child of it.
+  ```
+  
+#### After
+- Called regardless of whether an exception has been thrown by the target or not.
+  ![img](imgs/aop_advices_after.png)
+  ```java
+  @After("execution(void update(..))")
+  public void trackUpdate() {
+      logger.info("An update has been attempted...");
+  }
+  // We dont know how the method terminated
+  ```
+    
+#### Around
+- The most powerful and the most dangerous (We are responsible to delegate to the target).
+- `ProceedingJoinPoint` inherits from `JoinPoint` and adds the `proceed()` method.
+  ![img](imgs/aop_advices_around.png)
+  ```java
+  @Around("execution(@example.Cacheable * rewards.service..*(..))")
+  public Object cache(ProceedingJoinPoint point) throws Throwable {
+      Object value = cacheStore.get(CacheUtils.toKey(point));
+  
+      if (value != null) return value; // <--- Value exists? if so just return it.
+  
+      value = point.proceed(); // <--- Proceed only if not already cached
+      cacheStore.put(CacheUtils.toKey(point), value);
+      return value;
+  }
+  // Cache values returned by chacheable services.
+  ```
+  
+
+### Limitations of Spring AOP
+- Can only advise _non-private_ methods.
+- Can only apply aspects to _Spring Beans_.
+- Limitations of weaving with proxies
+  - When using proxies, suppose method a() calls method b() on the _same_ class/interface
+    - advice will _never_ be executed for method b().
+  - So inner calls will not be proxied.
+  
