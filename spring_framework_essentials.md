@@ -378,3 +378,48 @@ class TransferService {
 - Spring AOP
   - Java-based AOP framework with AspectJ integration
   - Using dynamic proxies for aspect weaving.
+
+### Core AOP Concepts [M6E2]
+- **JoinPoint:** A point in the execution of a program such as method call or exception thrown.
+  - ℹ️ Spring AOP only allows method calls as join points. 
+- **Pointcut:** An expression that selects one or more JoinPoints.
+- **Advice:** Code to be executed at each selected JoinPoint.
+- **Aspect:** A module that encapsulates pointcuts and advice.
+- **Weaving:** Technique by which aspects are combined with the main code.
+- **TargetClass**
+- **Proxy**
+
+### Implementing the Aspect
+- The aspect should be a bean.
+```java
+@Aspect // <---
+@Component
+public class PropertyChangeTracker {
+    private Logger logger = Logger.getLogger(getClass());
+    
+    @Before("execution(void set*(*))") // <--- The advice with pointcut defined
+    public void trackChange(JoinPoint point) { // <--- JoinPoint parameter provides context about the intercepted point
+        String methodName = point.getSignature().getName();
+        Object newValue = point.getArgs()[0];
+        logger.info(methodName + " about to change to "
+                + newValue + " on " + point.getTarget());
+    }
+}
+```
+
+- Next we should enable the use if `@Aspect`.
+
+```java
+    @Configuration
+    @EnableAspectJAutoProxy // <--- using Spring AOP for weaver (Proxy)
+    @ComponentScan(basePackage="com.example.aspects") // <---
+    public class AspectConfig {
+      //
+    }
+```
+
+### How Aspects are applied
+![img](imgs/aspects_proxy.png)
+
+### Which method is going to get proxied?
+- When using JDK proxy, only methods existing in the interface will be proxied.
