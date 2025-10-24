@@ -734,3 +734,43 @@ jdbcTemplate.update(
 );
 ```
 - There is also a method called `execute()` for DDL operations.
+
+### Working with ResultSets [M8E3]
+#### Generic Maps
+- `JdbcTemplate` can return each row of a `ResultSet` as a `Map<String, Object>`.
+  - The key will be column name, value will be column value.
+  - `queryForMap()` for a single row.
+  - `queryForList()` for multiple rows.
+- Useful for ad hoc reporting, testing.
+* Ad hoc: created or done for a particular purpose as necessary. (windows-on-data queries).
+
+#### Domain Objects
+- JdbcTemplate supports this using a callback approach.
+- You may prefer to use ORM for this, need to decide between JdbcTemplate queries and JPA mappings.
+- Callback interfaces
+  1. `RowMapper<T>` is a functional interface for processing each row of Result set.
+    - Having a `T mapRow(ResultSet rs, int rowNum) throws SQLException` method.
+    - 1:1 mapping
+  2. `ResultSetExtractor<T>` is a functional interface for processing entire ResultSet at once.
+     - Having a `T extractData(ResultSet rs) throws SQLException, DataAccessException` method.
+     - N:1 mapping
+  ```java
+  jdbcTemplate.query(
+      "select .. from order o, item i .. confirmation_id = ?",
+      (ResultSetExtractor<Order>) (rs) -> { // Casting is needed as multiple implementations with `rs` exists.
+          Order order = null;
+          while (rs.next()) {
+              if (order == null)
+                  order = new Order(rs.getLong("id"), rs.getString("name"), ..);
+              order.addItem(mapItem(rs));
+          }
+          return order;
+      },
+      number
+  );
+  ```
+  3. `RowCallbackHandler` like RowMapper but no return is needed!
+     - Useful when we want to process or write the data to a destination.
+     - 1:1 Mapping
+
+### Exception Hndling [M8E4]
