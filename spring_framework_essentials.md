@@ -658,3 +658,41 @@ public class PropertyChangeTracker {
   )
   ```
 - `DEFAULT` errorMode: whatever `@Sql` defines at class level, otherwise `FAIL_ON_ERROR`.
+
+## JDBC Simplification with Jdbc Template [M8]
+- It uses template design pattern (Eliminates boilerplate code).
+- It's written by Rod Johnson himself, co-founder of Spring.
+- Alleviates common causes of bugs
+- Handles `SQLException`s properly.
+- Provides full access to the standard JDBC constructs.
+```java
+int count = jdbcTemplate.queryForObject(
+    "SELECT COUNT(*) FROM CUSTOMERS",
+    Integer.class
+);
+```
+- This one line will do (All handled by Spring):
+  - Acquisition of the connection
+  - Participation in the transaction
+  - Execution of the statement
+  - Processing of the result set
+  - Handling exceptions
+  - Release of the connection
+
+  ```java
+  List<Customer> results = jdbcTemplate.query(someSql,
+      new RowMapper<Customer>() {
+          public Customer mapRow(ResultSet rs, int row) throws SQLException {
+            // map the current row to a Customer object.
+          }
+      }
+  );
+  ```
+- The `new RowMapper<Customer>()` is an anonymous class definition using `RowMapper` interface.
+
+### Creating a JdbcTemplate
+- Requires a DataSource.
+  ```java
+  JdbcTemplate template = new JdbcTemplate(dataSource);
+  ```
+- Create a template once and re-use it, Thread-safe after construction.
