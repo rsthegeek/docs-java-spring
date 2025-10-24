@@ -773,4 +773,22 @@ jdbcTemplate.update(
      - Useful when we want to process or write the data to a destination.
      - 1:1 Mapping
 
-### Exception Hndling [M8E4]
+### Exception Handling [M8E4]
+- Checked Exception (Developer forced to handle/declare it)
+  - BAD: intermediate methods must declare exception(s) from all methods below (Tight-coupling)
+- Unchecked Exception
+  - Can throw up the call hierarchy to the best place to handle it.
+  - GOOD: Methods in between don't know about it.
+  - **Spring always throws RuntimeExceptions (Unchecked).**
+- `SQLException` checked exception that vanilla JDBC throws.
+  - Too general - one exception for every database error.
+  - Calling class knows you're using JDBC.
+- Spring provides `DataAccessException` hierarchy
+  - Hides whether you are using JPA, Hibernate, JDBC ...
+  - Actually a hierarchy of sub-exceptions.
+
+  ![img](imgs/jdbc_exception_example_bad_sql_grammar.png)
+
+  - [SQLException error code mapping to Spring DataAccessExceptions](https://github.com/spring-projects/spring-framework/blob/main/spring-jdbc/src/main/resources/org/springframework/jdbc/support/sql-error-codes.xml)
+
+  ![img](imgs/spring_data_access_exception.png)
