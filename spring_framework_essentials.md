@@ -696,3 +696,41 @@ int count = jdbcTemplate.queryForObject(
   JdbcTemplate template = new JdbcTemplate(dataSource);
   ```
 - Create a template once and re-use it, Thread-safe after construction.
+
+### Querying with JdbcTemplate [M8E2]
+- JdbcTemplate can query for
+  - Simple types (int, long, String, Date, ...)
+    ```java
+    // No bind variables
+    jdbcTemplate.queryForObject("select min(dob) from PERSON", Date.class);
+    // Older alternatives, queryForInt(), queryForLong(), deprecated and removed since Spring 4.2
+    
+    // With bind variables
+    jdbcTemplate.queryForObject(
+        "select count(*) from PERSON where age > ? and nationality = ?",
+        Integer.class,
+        age,
+        nationality.toString()
+    );
+    ```
+  - Generic Maps
+  - Domain Objects
+
+- It has `update()` method for **inserting, updating, and deleting** rows. (Any non-SELECT SQL)
+```java
+// Insert
+jdbcTemplate.update(
+    "insert into PERSON (first_name, last_name, age) values (?, ?, ?)",
+    person.getFirstName(),
+    person.getLastName(),
+    person.getAge()
+);
+
+// Update
+jdbcTemplate.update(
+    "update PERSON set age = ? where id = ?",
+    person.getAge(),
+    person.getId()
+);
+```
+- There is also a method called `execute()` for DDL operations.
