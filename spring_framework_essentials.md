@@ -1,5 +1,5 @@
 # Spring Framework Essentials
-- (Docs)[https://docs.spring.io/spring-framework/reference/]
+- [Docs](https://docs.spring.io/spring-framework/reference/)
 
 ## Service locator pattern vs. IoC container
 - Service Locator (SL)
