@@ -548,13 +548,14 @@ public class PropertyChangeTracker {
   - **JUnit Vintage**: A _TestEngine_ for running JUnit 3 & 4 tests on the platform.
 - JUnit 5 features new annotations, some of them replacing old JUnit 4 annotations.
 
-| JUnit 4 Annotation       | JUnit 5 Annotation                                |
-|--------------------------|---------------------------------------------------|
-| `@Before`                | `@BeforeEach`                                     |
-| `@After`                 | `@AfterEach`                                      |
-| `@BeforeClass`           | `@BeforeAll`                                      |
-| `@AfterClass`            | `@AfterAll`                                       |
-| `@Ignore`                | `@Disabled`                                       |
+| JUnit 4 Annotation | JUnit 5 Annotation                        |
+|--------------------|-------------------------------------------|
+| `@Before`          | `@BeforeEach`                             |
+| `@After`           | `@AfterEach`                              |
+| `@BeforeClass`     | `@BeforeAll`                              |
+| `@AfterClass`      | `@AfterAll`                               |
+| `@Ignore`          | `@Disabled`                               |
+| `@RunWith`         | `@ExtendWith` (Multi-extension supported) |
 - New annotations introduced
   - `@DisplayName`
   - `@Nested`
@@ -563,4 +564,97 @@ public class PropertyChangeTracker {
 - JUnit 5 ignores all JUnit 4 annotations.
 
 ### Integration Testing with Spring [M7E2]
+- Unit Test > Integration Test > Performance Test > End-to-end Test.
+- Unit Test
+  - Test a class in isolation, Keeping dependencies minimal.
+  - Uses simplified alternatives for dependencies (Stubs and/or Mocks)
+  - Spring is not needed for unit test.
+- Integration Test
+  - Since we are testing integration of multiple units together, We need Spring.
+  - Each component (unit) should work individually first (Unit test showed this).
+  - Tests application classes in context of their surrounding infrastructure.
+    - Out-of-container testing, no need to run up full App Server.
+    - Infrastructure may be scaled down (Using ActiveMQ instead of commercial messaging server)
+    - Test Containers (Use of lightweight, throwaway instances of common DBs)
 
+#### Spring support for [testing](https://docs.spring.io/spring-framework/reference/testing.html)
+- It has `TestContext` framework that defins an `ApplicationContext` for tests.
+- `@ContextConfiguration` Defines the spring configuration to use.
+- It's packaged as a separate module `spring-test.jar`.
+- `SpringExtension` class is a Spring aware JUnit 5 extension.
+  ```java
+  @ExtendWith(SpringExtension.class) // Run with Spring support
+  @ContextConfiguration(classes={SystemTestConfig.class}) // Point to system test configuration file(s)
+  public class TransferServiceTests {
+      @Autowired
+      private TransferService transferService; // Inject bean to test
+      // No need for @BeforeEach method for creating TransferService 
+      
+      @Test
+      public void shouldTransferMoneySuccessfully() {
+          TransferConfirmation conf = transferService.transfer(...);
+          // Test the system as normal
+      }
+  }
+  ```
+- `@SpringJUnitConfig(SystemTestConfig.class)` is "composed" annotation that combines:
+  - `@ExtendWith(SpringExtension.class)` from JUnit 5
+  - `@ContextConfiguration(classes={SystemTestConfig.class})` from Spring
+
+- Use of `@Autowired` in test method parameters are allowed (Only in tests).
+  ```java
+      public void shouldTransferMoneySuccessfully(@Autowired TransferService transferService) {
+          TransferConfirmation conf = transferService.transfer(...);
+          // Test the system as normal
+      }
+  ```
+
+- Test context configuration can be defined as an inner class!
+  - We can use `@Import` and then overwrite the IoC bindings in the config class.  
+  ![img](imgs/test_config_as_inner.png)
+- Using `@SpringJUnitConfig` Spring will create the _ApplicationContext_ once and **reuse** that for every test method.
+- Using `@DirtiesContext` forces context to be closed at the end of test method.
+  - Allows testing of `@PreDestroy` behavior.
+  - Next test gets a new ApplicationContext.
+  ```java
+  @Test
+  @DiritesContext
+  public void testTransferLimitExceeded() {
+    transferService.setMaxTransfers(0);
+    // Do a transfer, expect a failure.
+  }
+  ```
+- Using `@TestPropertySource` on the test class, definition of properties just for testing is possible.
+  - Has higher precedence. (overwrites other properties)
+  ```java
+  @SpringJUnitConfig(SystemTestConfig.class)
+  @TestPropertySource(
+      properties = {"username=foo", "password=bar"},
+      locations = "classpath:/transfer-test.properties"
+  )
+  public class TransferServiceTest {
+      // ...
+  }
+  ```
+
+#### Testing with profiles [M7E3]
+- Enabling profiles with passing system properties won't work for tests.
+- `@ActiveProfiles({"jdbc", "dev"})` for test class defines one or more profiles.
+- Beans associated with that profiles or no profiles will be instantiated.
+
+#### Testing with databases
+- `@Sql("test-files/test-data.sql")` can be used at class level to run scripts before **each** test method.
+- It also can be defined at method level, **overwriting** class level definition for that method.
+- Multiple definitions are allowed.
+  ```java
+  @Sql(
+    scripts = "test-files/cleanup.sql",
+    executionPhase = Sql.ExecutionPhase.AFTER_TEST_METHOD,
+    config = @SqlConfig(
+        errorMode = ErrorMode.FAIL_ON_ERROR, // CONTINUE_ON_ERROR, IGNORE_FAILED_DROPS, DEFAULT*
+        commentPrefix = "//",
+        separator = "@@"
+    )
+  )
+  ```
+- `DEFAULT` errorMode: whatever `@Sql` defines at class level, otherwise `FAIL_ON_ERROR`.
