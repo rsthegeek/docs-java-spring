@@ -524,7 +524,7 @@ public class PropertyChangeTracker {
   }
   // Cache values returned by chacheable services.
   ```
-  
+
 
 ### Limitations of Spring AOP
 - Can only advise _non-private_ methods.
@@ -533,4 +533,34 @@ public class PropertyChangeTracker {
   - When using proxies, suppose method a() calls method b() on the _same_ class/interface
     - advice will _never_ be executed for method b().
   - So inner calls will not be proxied.
-  
+
+
+## Testing Spring Application [M7]
+### JUnit 5
+- JUnit 5 support is a major feature of Spring 5.3
+- It's the default JUnit version from SpringBoot 2.6
+- Requires Java 8+ at runtime
+- JUnit 4 was a monolith, everything in a single jar.
+- JUnit 5 is written from scratch and divided to 3 components (Separation of concerns).
+- Components
+  - **JUnit Platform**: A foundation for launching testing frameworks in the JVM.
+  - **JUnit Jupiter**: The API we use for writing tests and extensions in JUnit 5. (Jupiter is the fifth planet of the solar system)
+  - **JUnit Vintage**: A _TestEngine_ for running JUnit 3 & 4 tests on the platform.
+- JUnit 5 features new annotations, some of them replacing old JUnit 4 annotations.
+
+| JUnit 4 Annotation       | JUnit 5 Annotation                                |
+|--------------------------|---------------------------------------------------|
+| `@Before`                | `@BeforeEach`                                     |
+| `@After`                 | `@AfterEach`                                      |
+| `@BeforeClass`           | `@BeforeAll`                                      |
+| `@AfterClass`            | `@AfterAll`                                       |
+| `@Ignore`                | `@Disabled`                                       |
+- New annotations introduced
+  - `@DisplayName`
+  - `@Nested`
+  - `@ParameterizedTest`
+  - many more...
+- JUnit 5 ignores all JUnit 4 annotations.
+
+### Integration Testing with Spring [M7E2]
+
