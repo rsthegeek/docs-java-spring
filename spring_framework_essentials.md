@@ -794,6 +794,7 @@ jdbcTemplate.update(
   ![img](imgs/spring_data_access_exception.png)
 
 ## Transaction Management with Spring [M9]
+- In java we have different APIs for managing transactions (JDBC, JPA, JMS)
 - ACID principals enable concurrent access to shared resource.
   - Atomic: All or nothing
   - Consistent: Data integrity never violated
@@ -803,3 +804,14 @@ jdbcTemplate.update(
 
   ![img](imgs/transactions_non_atomic.png)
   ![img](imgs/transactions_atomic.png)
+
+### Spring Transaction Management [M9E2]
+- Spring separates transaction _demarcation_ from transaction _implementation_.
+- Demarcation expressed declaratively via AOP (`@Transactional`).
+  - Programmatic approach is also available.
+- `PlatformTransactionManager` abstraction hides implementation details.
+  - Multiple implementations available.
+- Spring uses the same API for global vs. local, switching requires only changing the transaction manager.
+  - Local transaction: Only one resource is involved (e.g. One Database).
+  - Global transaction: Also called _Distributed Transaction_ coordinates multiple transactional resources.
+    - Uses JTA (Jakarta Transaction API) under the hood.
