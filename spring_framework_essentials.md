@@ -807,11 +807,77 @@ jdbcTemplate.update(
 
 ### Spring Transaction Management [M9E2]
 - Spring separates transaction _demarcation_ from transaction _implementation_.
-- Demarcation expressed declaratively via AOP (`@Transactional`).
+- Demarcation expressed declaratively via AOP (`@Transactional` annotation).
   - Programmatic approach is also available.
-- `PlatformTransactionManager` abstraction hides implementation details.
+- The main component in transaction management: `PlatformTransactionManager` Interface.
+  - Abstraction hides implementation details
   - Multiple implementations available.
 - Spring uses the same API for global vs. local, switching requires only changing the transaction manager.
   - Local transaction: Only one resource is involved (e.g. One Database).
   - Global transaction: Also called _Distributed Transaction_ coordinates multiple transactional resources.
     - Uses JTA (Jakarta Transaction API) under the hood.
+
+### How to enable springs transaction support?
+1. Declare a `PlatformTransactionManager` bean.
+2. Declare a Transactional method.
+    - Using annotations or programmatic (Can mix and match)
+3. Add `@EnableTransacitonManagement` to configuration class.
+    - Defines a bean post-processor to proxy `@Transactional` beans.
+    - It uses an `Around` advice.
+        ![img](imgs/transactions_proxy.png)
+
+### PlatformTransactionManager Implementations
+- `DataSourceTransactionManager`
+- `JmsTransactionManager`
+- `JpaTransactionManager`
+- `JtaTransactionManager`
+- `WebLogicJtaTransactionManager`
+- `WebSphereUowTransactionManager`
+ 
+- Example (Local):
+  ```java
+  @Bean
+  public PlatformTransactionManager transactionManager(DataSource dataSource) {
+      return new DataSourceTransactionManager(dataSource);
+  }
+  // A DataSource bean must be defined elsewhere
+  ```
+  - Bean id `transactionManager` is recommended name.
+
+- Example (Global):
+  ```java
+  @Bean
+  public PlatformTransactionManager transactionManager() {
+      return new JtaTransactionManager();
+  }
+  
+  @Bean
+  public DataSource dataSource(@Value("${db.jndi}") String jndiName) {
+      JndiDataSourceLookup lookup = new JndiDataSourceLookup();
+      return lookup.getDataSource(jndiName);
+  }
+  ```
+  - Or use container-specific subclasses like `WebLogicJtaTransactionManager`.
+  - Spring doesn't have any JTA implementations. A full-blown application server is needed or an implementation.
+
+### @Transactional: What happens exactly?
+- Proxy implements the following behaviour
+  - Transaction started before entering the method
+  - Commit at the end of the method
+  - Rollback if method throws a `RuntumeException`
+    - Default behaviour (Can be overridden)
+    - Checked exceptions **do not cause rollback**!
+- All controlled by configuration
+
+### Transaction bound to current thread
+- Holds the underlying JDBC connection.
+- Hibernate sessions, JTA work similarly.
+- You can access the connection manually: `DataSourceUtils.getConnection(dataSource)`
+
+### More
+- `@Transactional` can be declared at class level making all the methods transactional.
+- Since Spring Framework 5.0 it can be declared **at interface level**.
+- Method can also be annotated, **overriding class level config**.
+- Java also has a `javax.transaction.Transactional`!
+  - Also supported by Spring, but has fewer options.
+  - Better to use the Spring one.
