@@ -792,3 +792,14 @@ jdbcTemplate.update(
   - [SQLException error code mapping to Spring DataAccessExceptions](https://github.com/spring-projects/spring-framework/blob/main/spring-jdbc/src/main/resources/org/springframework/jdbc/support/sql-error-codes.xml)
 
   ![img](imgs/spring_data_access_exception.png)
+
+## Transaction Management with Spring [M9]
+- ACID principals enable concurrent access to shared resource.
+  - Atomic: All or nothing
+  - Consistent: Data integrity never violated
+  - Isolated: transactions are isolated from each other
+  - Durable: Committed changes are permanent
+- No transactions -> Connection per data access operation (less efficient)
+
+  ![img](imgs/transactions_non_atomic.png)
+  ![img](imgs/transactions_atomic.png)
