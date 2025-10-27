@@ -885,7 +885,7 @@ jdbcTemplate.update(
 ### Transaction Propagation [M9E3]
 `@Transactional(propagation=Propagation.REQUIRES_NEW)`
 - What should happen if we call a transactional method inside another transactional method (properly)?
-- 7 Levels of propagation.
+#### 7 Propagation levels
 
 | **Propagation Level**  | **Description**                                                         | **Starts New Txn?**  | **Joins Existing Txn?** | **Suspends Existing Txn?** | **Throws Exception If…** |
 |------------------------|-------------------------------------------------------------------------|----------------------|-------------------------|----------------------------|--------------------------|
@@ -905,7 +905,16 @@ jdbcTemplate.update(
 )
 ```
 
-#### Transactional tests
+### Transactional tests
 - `@Transactional` can be used with test, on method and also the class.
   - The Transaction will be rolled back afterward. (only outermost transaction)
 - `@Commit` annotation will change the default (rollback) behaviour.
+
+### 5 Isolation levels [Extra]
+| Isolation Level      | Description                                                                                | Database Behavior                                                                                          | Example Use Case                                                                             |
+|----------------------|--------------------------------------------------------------------------------------------|------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------|
+| **DEFAULT**          | Uses the database’s default isolation level (commonly `READ_COMMITTED` in most databases). | Depends on the underlying database (e.g., PostgreSQL → READ COMMITTED).                                    | When you want Spring to defer to the database defaults.                                      |
+| **READ_UNCOMMITTED** | Allows reading uncommitted changes from other transactions.                                | May cause **dirty reads**, **non-repeatable reads**, and **phantom reads**.                                | Rarely used; mainly for read-heavy systems where absolute accuracy isn’t critical.           |
+| **READ_COMMITTED**   | Prevents reading uncommitted data (no dirty reads).                                        | Still allows **non-repeatable reads** and **phantom reads**.                                               | Default for many databases; good balance between performance and consistency.                |
+| **REPEATABLE_READ**  | Ensures that data read within a transaction remains consistent for that transaction.       | Prevents **dirty reads** and **non-repeatable reads**, but **phantoms** may still occur (depending on DB). | Used when consistent reads within a transaction are important, e.g., financial applications. |
+| **SERIALIZABLE**     | Highest isolation level — transactions are executed as if serialized sequentially.         | Prevents **dirty**, **non-repeatable**, and **phantom reads**.                                             | Use only when strict consistency is critical; may significantly reduce concurrency.          |
