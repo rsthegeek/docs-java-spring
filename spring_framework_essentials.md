@@ -881,3 +881,31 @@ jdbcTemplate.update(
 - Java also has a `javax.transaction.Transactional`!
   - Also supported by Spring, but has fewer options.
   - Better to use the Spring one.
+
+### Transaction Propagation [M9E3]
+`@Transactional(propagation=Propagation.REQUIRES_NEW)`
+- What should happen if we call a transactional method inside another transactional method (properly)?
+- 7 Levels of propagation.
+
+| **Propagation Level**  | **Description**                                                         | **Starts New Txn?**  | **Joins Existing Txn?** | **Suspends Existing Txn?** | **Throws Exception If…** |
+|------------------------|-------------------------------------------------------------------------|----------------------|-------------------------|----------------------------|--------------------------|
+| `REQUIRED` *(default)* | Join current transaction if exists; otherwise, start a new one.         | ✅ if none           | ✅                     | ❌                          | —                       |
+| `REQUIRES_NEW`         | Always start a new transaction; suspend any existing one.               | ✅ always            | ❌                     | ✅                          | —                       |
+| `SUPPORTS`             | Join transaction if one exists; otherwise, run non-transactionally.     | ❌                   | ✅ if exists           | ❌                          | —                       |
+| `NOT_SUPPORTED`        | Always run non-transactionally; suspend any existing transaction.       | ❌                   | ❌                     | ✅                          | —                       |
+| `MANDATORY`            | Must run inside an existing transaction.                                | ❌                   | ✅                     | ❌                          | ❌ No existing txn      |
+| `NEVER`                | Must *not* run inside a transaction.                                    | ❌                   | ❌                     | ❌                          | ❌ Existing txn present |
+| `NESTED`               | Start a **nested transaction** inside current one using **savepoints**. | ✅ (savepoint-based) | ✅                     | ❌                          | —                       |
+
+### Rollback rules [M9E4]
+```java
+@Transactional(
+    rollbackFor=MyCheckedException.class,
+    noRollbackFor={JmxException.class, MailException.class}
+)
+```
+
+#### Transactional tests
+- `@Transactional` can be used with test, on method and also the class.
+  - The Transaction will be rolled back afterward. (only outermost transaction)
+- `@Commit` annotation will change the default (rollback) behaviour.
