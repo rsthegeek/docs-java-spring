@@ -1,5 +1,5 @@
 # Spring Boot
-## Feature introduction
+## Feature introduction [M1]
 - The "Opinionated" view of spring platform and third party libraries.
   - But still customizable.
 - handles low-level, predictable set-up for us.
@@ -33,6 +33,6 @@
   - Examples of it
   ![img](imgs/auto_config_example.png)
 - Very common to use `@SpringBootConfiguration`, `@ComponentScan` & `@EnableAutoConfiguration` together.
-  - `@SpringBootConfiguration` simply extends `Configuration`.
-  - `SpringBootApplication` combines all three.
+  - `@SpringBootConfiguration` simply extends `@Configuration`.
+  - `@SpringBootApplication` combines all three.
 ![img](imgs/spring_boot_application_annotation.png)
