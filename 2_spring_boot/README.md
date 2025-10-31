@@ -205,4 +205,13 @@ public JdbcTemplate jdbcTemplate(DataSource dataSource) {
   - `@ConditionalOnProperty`
   - Are we in a specific platform?
   - etc...
-  - 
+
+- What are Auto-Configuration classes?
+  - Pre-written Spring configurations
+  - `org.springframework.boot.autoconfigure` package
+  - See `spring-boot-autoconfigure` JAR file
+- Auto-configuration beans processed after explicitly created beans are added.
+- `@AutoConfiguration` annotates a class explicitly for autoconfiguration.
+- `spring-boot-autoconfigure/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
+
+### Override default configuration [M2E3]
