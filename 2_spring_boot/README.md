@@ -215,3 +215,106 @@ public JdbcTemplate jdbcTemplate(DataSource dataSource) {
 - `spring-boot-autoconfigure/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
 
 ### Override default configuration [M2E3]
+- Spring boot is designed to make overriding easy.
+
+#### 1. Set some of Spring Boot's properties
+- [Hundreds of pre-defined properties](https://docs.spring.io/spring-boot/appendix/application-properties/index.html) are available.
+- Used by Spring-provided `@ConfigurationProperties` / `@AutoConfiguraiton` classes.
+- _Example:_ External Database
+  ```properties
+  spring.datasource.url=jdbc:mysql://localhost/test
+  spring.datasource.username=dbuser
+  spring.datasource.password=dbpass
+  spring.datasource.driver-class-name=com.mysql.jdbc.Driver
+  # ^ Driver class name is not required as it is autoconfigured typically
+  
+  spring.sql.init.schema-locations=classpath:/testdb/schema.sql
+  spring.sql.init.data-locations=classpath:/testdb/data.sql
+  
+  # Connection pool settings
+  spring.datasource.initial-size=
+  spring.datasource.max-active=
+  spring.datasource.max-idle=
+  spring.datasource.min-idle=
+  ```
+  - Spring boot creates a **pooled DataSource** by default.
+    - `spring-boot-starter-jdbc` or `spring-boot-starter-jpa` try to pull in a connection pool by default.
+    - _Choices:_ Tomcat, HikariCP, Commons DBCP 1 & 2
+      - Set `spring.datasource.type` to pick a pool explicitly.
+      - Default pool
+        - Spring boot 1.x: Tomcat
+        - Spring boot 2.x: Hikari
+- _Example:_ Controlling logging level
+  ```properties
+  logging.level=ERROR
+  logging.level.org.springframework=DEBUG
+  logging.level.com.acme.your.code=INFO
+  ```
+  - Spring uses SLF4J and the default implementation it uses is Logback.
+    - Log4j, Log4j2, and Java Util Logging are usable also.
+  - Some properties (Like logging) **cannot be set** in any property files other than `applicantion.properties/yml` because they are needed early on.
+
+#### 2. Explicitly define beans yourself
+- Autoconfiguration is generally based on the bean type, not name.
+- _Example:_ defining a `DataSource` bean yourself stops Spring Boot from autoconfiguring a default `DataSource`.
+
+#### 3. Explicitly disable some auto-configuration classes
+- Via annotation
+  ```java
+  @EnableAutoConfiguraion(exclude = DataSourceAutoConfiguration.class)
+  // Also exists:
+  // @SpringBootApplication(exclude = DataSourceAutoConfiguration.class)
+  public class ApplicationConfiguration {
+      //...
+  }
+  ```
+- Or use configuration
+  ```properties
+  # application.properties
+  spring.autoconfigure.exclude=\
+  org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
+  # comma separated
+  ```
+
+#### 4a. Override dependency versions
+- Spring Boot POMs preselect the [versions of dependencies](https://docs.spring.io/spring-boot/appendix/dependency-versions/index.html)
+  - Ensures the versions of all dependencies are compatible
+  - Simplifies dependency management in most cases
+- Set the appropriate [version property](https://docs.spring.io/spring-boot/appendix/dependency-versions/properties.html) and version in your `pom.xml` or `build.gradle`
+  ```xml
+  <properties>
+    <spring-framework.version>5.3.22</spring-framework.version>
+  </properties>
+  ```
+  - This only works if you **inherit** from the parent. You need to redefine the artifact if you directly import the dependency.
+#### 4b. Explicitly substitute dependencies
+- _Example:_ Excluding tomcat and using jetty.
+```xml
+<dependency>
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-web</artifactId>
+  <exclusions>
+    <exclusion>
+      <!-- Exclude Tomcat -->
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-tomcat</artifactId>
+    </exclusion>
+  </exclusions>
+</dependency>
+<dependency>
+  <!-- Use Jetty -->
+  <groupId>org.springframework.boot</groupId>
+  <artifactId>spring-boot-starter-jetty</artifactId>
+</dependency>
+```
+
+#### CommandLineRunner and ApplicationRunner
+- Offer a Spring-style entry point for running applications
+  - No need to have business logic in the `main()` method.
+- `CommandLineRunner`
+  - Offers `run()` method, handling arguments as an array.
+- `ApplicationRunner`
+  - Offers `run()` method, handling arguments as `ApplicationArguments`
+  - A more sophisticated argument handling mechanism
+- The `run()` methods are invoked before returning from `SpringApplication.run()` but after all the beans are configured.
+
