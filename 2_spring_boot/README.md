@@ -318,3 +318,98 @@ public JdbcTemplate jdbcTemplate(DataSource dataSource) {
   - A more sophisticated argument handling mechanism
 - The `run()` methods are invoked before returning from `SpringApplication.run()` but after all the beans are configured.
 
+## Spring Data JPA [M3]
+- Starter for spring data jpa is `spring-boot-starter-data-jpa` package.
+- If JPA is on classpath, Spring Boot autoconfigures:
+  - A `DataSource`
+  - A `EntityManagerFactoryBean`
+    - This will create `EntityManager`, our 2nd level cache is here.
+  - A `JpaTransactionManager`
+- Without Spring Boot we need this much config just for EntityManagerFactoryBean:
+```java
+@Bean
+public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+    
+    HibernateJpaVendorAdapter adapter = new HibernateJpaVendorAdapter();
+    adapter.setShowSql(true);
+    adapter.setGenerateDdl(true);
+    adapter.setDatabase(Database.HSQL);
+
+    Properties props = new Properties();
+    props.setProperty("hibernate.format_sql", "true");
+
+    LocalContainerEntityManagerFactoryBean emfb =
+        new LocalContainerEntityManagerFactoryBean();
+    emfb.setDataSource(dataSource);
+    emfb.setPackagesToScan("rewards.internal");
+    emfb.setJpaProperties(props);
+    emfb.setJpaVendorAdapter(adapter);
+
+    return emfb;
+}
+```
+- Spring Boot by default looks in the same package that `@EnableAutoConfigure` annotation is used and all its sub-packages for entities.
+- This can be customized using `@EntityScan("rewards.internal")` annotations.
+- Vendor-provided properties can be customized in `application.properties`
+  - spring.jpa.database
+  - spring.jpa.show-sql
+  - spring.jpa.hibernate.ddl-auto
+  - spring.jpa.properties.hibernate.format_sql
+  - Every Hibernate setting can be customized using `spring.jpa.hibernate.xxx`.
+
+### Instant Repositories [M3E2]
+- Is a repository that will be **created at runtime**.
+- How?
+  - Step 1: Annotate domain class, define keys and structure (standard JPA)
+    - using `@Entity`, `@Table(...)`, `@Id`, `@GeneratedValue(strategy = GenerationType.AUTO)`
+    - Spring Data provides similar annotations for JPA for other Data stores.
+      - MongoDB: `@Document`
+      - Gemfire: `@Region`
+      - Neo4j: `@NodeEntity`, `@GraphId`
+  - Step 2: Define your repository as an _interface_.
+    - The basic `Repository<T, K>` interface has no methods and just for marking the class for spring.  
+    - Using `CrudRepository<T, ID>` provides following methods
+      - `count()`
+      - `T save()`
+      - `Iterable<T> save()`
+      - `Optional<T> findById()`
+      - `Iterable<T> findAll()`
+      - `Iterable<T> findAllById(Iterable<ID> ids)`
+      - `void deleteAll(Iterable<? extends T> entities)`
+      - `void delete(T entity)`
+      - `void deleteById(ID id)`
+      - `void deleteAll()`
+    - Using `PagingAndSortingRepository<T, K>` will additionally provide:
+      - `Iterable<T> findAll(Sort)`
+      - `Page<T> findAll(Pageable)`
+- Spring Data will implement it at run-time.
+  - Scans for interfaces extending Spring Data Common `Repository<T, K>`.
+  - CRUD methods auto-generated if using `CrudRepository<T, K>`
+  - Paging, custom queries and sorting supported
+- Define your own Repository Interface - Option #1
+  - Can define finders, must obey naming convention
+    - `find(First)By<DataMemberOfClass><Op>`, Where `<Op>` can be:
+      - GreaterThan
+      - NotEquals
+      - Between
+      - Like, ...
+    - The naming convention also supports logicals like `And`, `Or`.
+    ```java
+    public interface CustomerRepository extends CrudRepository<Customer, Long> {
+        public Customer findFirstByEmail(String someEmail); // No <Op> for Equals
+        public List<Customer> findByOrderDateLessThan(Date someDate);
+        public List<Customer> findByOrderDateBetween(Date d1, Date d2);
+
+        @Query("SELECT c FROM Customer c WHERE c.email NOT LIKE '%@%'")
+        public List<Customer> findInvalidEmails();
+        // Custom query uses query-language of underlying product (here JPQL)
+    
+        @Query("SELECT u from Customer u where u.emailAddress = ?1")
+        Customer findByEmail(String email); // ?1 replaced by method param
+    }
+    ```
+- Spring Boot automatically scans for repository interfaces (just like entities).
+- Customization is possible using `@EnableJpaRepositories(basePackages="...")`.
+  - For MongoDB it's `@EnableMongoRepositories`.
+- Spring uses proxies here to implement the interface and bind it as a bean.
+- 
