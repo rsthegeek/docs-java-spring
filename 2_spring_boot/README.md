@@ -412,4 +412,9 @@ public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
 - Customization is possible using `@EnableJpaRepositories(basePackages="...")`.
   - For MongoDB it's `@EnableMongoRepositories`.
 - Spring uses proxies here to implement the interface and bind it as a bean.
-- 
+- `@AttributeOverride`: Tells JPA to use the ALLOCATION_PERCENTAGE column to populate the `Percentage.value` field.
+  ```java
+  @AttributeOverride(name="value",column=@Column(name="ALLOCATION_PERCENTAGE"))
+  private Percentage allocationPercentage;
+  ```
+- `@Transient` prevents db mapping of annotated field.
