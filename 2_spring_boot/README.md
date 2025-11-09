@@ -418,3 +418,104 @@ public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
   private Percentage allocationPercentage;
   ```
 - `@Transient` prevents db mapping of annotated field.
+
+## Spring MVC [M4]
+- Types of Spring MVC applications
+  - Web Servlet
+    - Traditional approach
+    - Based on Java EE Servlet Specification
+      - Servlets
+      - Filters
+      - Listeners
+      - etc...
+  - Web Reactive (WebFlux)
+    - Newer, more efficient
+    - Non-blocking approach
+    - Netty, Undertow, Servlet 3.1+
+    - Requires knowledge of reactive programming
+- Everything we need to develop a Spring MVC app is in `spring-boot-starter-web`
+  - spring-web.jar
+  - spring-webmvc.jar
+  - spring-boot-starter.jar
+  - jackson*.jar
+  - tomcat-embed*.jar
+  - ...
+- At startup time, spring boot creates Spring MVC components.
+  ![spring_mvc](imgs/spring_mvc.png)
+- Developers need to define only the controllers and views. (yellow-colored)
+- Message converters translate objects returned by controller to `json` or `xml`. (`@ResponseBody`)
+- Message converters also translate request body to java objects. (`@RequestBody`)
+
+### Request processing lifecycle (REST) [M4E2]
+![img](imgs/request_processing_lifecycle.png)
+- Message converters
+  - Jackson for json/xml
+  - JAXB for xml
+  - Gson for json
+
+### Controller implementation
+```java
+@Controller
+public class AccountController {
+    @GetMapping("/accounts")
+    public @ResponseBody List<Account> list() {/*...*/}
+}
+```
+- `@ResponeBody` defines a REST response, turning off the view handling subsystem.
+- `@RestController` is a composed annotation. Incorporating `@Controller` and `@ResponseBody`.
+
+#### Controller method arguments
+- Spring will inject what we need
+  - HttpServletRequest
+  - HttpSession
+  - Principal
+  - Locale
+  - etc...
+- It's better to decouple form Servlet API, using spring annotations.
+- `@RequestParam` Extracts request parameters from the **request URL** and does type conversion.
+- `@PathVariable` extracts value from URI template defined with `{...}` placeholder.
+  ```java
+  @GetMapping("/accounts/{accountId}")
+  public Account find(@PathVariable("accountId") long id) {/*...*/}
+  ```
+- Drop annotation value if it matches the parameter name.
+  - How Spring does that? [Reflection](https://docs.oracle.com/javase/tutorial/reflect/member/methodparameterreflection.html)
+  ![img](imgs/method_param_name_conv.png)
+- `@RequestHeader("user-agent")` gives us data from header.
+- [More...](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-controller/ann-methods.html)
+
+### Message converters [M4E3]
+- Converts HTTP request/response data.
+  - XML: JAXP Source, JAXB2 mapped object*, Jackson-Dataformat-XML*
+  - GSON*, Jacksong JSON*
+  - Feed data* such as Atom/RSS
+  - Google protocol buffers*
+  - Form-based data
+  - Byte[], String, BufferedImage
+- (*) Requires 3rd party libs on classpath
+- Automatically setup by Spring Boot (except protocol buffers)
+- Uses `Accept` header.
+
+#### ResponseEntity
+- Subclasses `HttpEntity` with fluent API
+- Set headers or control response content.
+```java
+ResponseEntity<String> response = ResponseEntity.ok()
+        .contentType(MediaType.TEXT_PLAIN)
+        .body("Hello Spring");
+```
+
+### JAR or WAR configuration [M4E3]
+- Using `spring-boot-starter-web` ensures Spring Web and Spring MVC are on classpath.
+- Spring Boot autoconfiguration for Web application
+  - Sets up `DispatcherServlet`
+  - Sets up internal configuration to support controllers
+  - Sets up default resource locations (images, CSS, JavaScript)
+  - Sets up default Message Converters
+  - And much, much more.
+- By default, Spring Boot starts up an embedded web container (Tomcat by default)
+- For cloud deployment having fat JAR is recommended. ([The 12-Factor App](https://en.wikipedia.org/wiki/Twelve-Factor_App_methodology))
+- using WAR is the traditional way.
+
+#### Deploying as WAR
+- 
