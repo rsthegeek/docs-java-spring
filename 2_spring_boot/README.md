@@ -517,5 +517,53 @@ ResponseEntity<String> response = ResponseEntity.ok()
 - For cloud deployment having fat JAR is recommended. ([The 12-Factor App](https://en.wikipedia.org/wiki/Twelve-Factor_App_methodology))
 - using WAR is the traditional way.
 
-#### Deploying as WAR
-- 
+#### Running within a Web Container (traditional)
+```java
+// Subclasses Spring’s WebApplicationInitializer
+// called by the web container (Servlet 3+ required)
+@SpringBootApplication
+public class Application extends SpringBootServletInitializer {
+
+    // Specify the configuration class(es) to use
+    protected SpringApplicationBuilder configure(
+        SpringApplicationBuilder application
+    ) {
+        return application.sources(Application.class);
+    }
+}
+
+// Don’t forget to change the artifact type to war
+```
+- The above
+  - Uses dynamic registration of servlets (Servlet 3+)
+  - Required no web.xml file.
+
+- We can configure a hybrid WAR
+  - can both be used in a servlet container and ran from CLI (`jave -jar`).
+  ```java
+  @SpringBootApplication
+  public class Application extends SpringBootServletInitializer {
+  
+      protected SpringApplicationBuilder configure(
+          SpringApplicationBuilder application
+      ) {
+          // Used by web container
+          return application.sources(Application.class);
+      }
+      
+      public static void main(String[] args) {
+          // Ran from CLI
+          SpringApplication.run(Application.class, args);
+      }
+  }
+  ```
+- However, embedded Tomcat JARs can cause conflicts when running WAR inside traditional web container.
+  - Example: running within a different version of Tomcat.
+- Best Practice: Mark Tomcat dependencies as provided when building WARs for traditional containers.
+- When using spring boot plugin we can create fat jar along with normal jar.
+  - Fat jar = uber jar
+    - Über is the German word for above or over (it's actually cognate with the English over).
+- In a hybrid approach: similar concept applies for WAR, but one with embedded container and another without.
+  - Both having full dependencies.
+
+#### Spring Boot Developer Tools
